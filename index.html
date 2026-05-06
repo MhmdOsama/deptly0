@@ -1,0 +1,1637 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
+    <title>حساباتي - إدارة الديون الشخصية</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%233b82f6'%3E%3Cpath d='M4 6h16v2H4V6zm2-4h12v2H6V2zm16 8H2v12h20V10zm-4 6h-4v-2h4v2z'/%3E%3C/svg%3E">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%233b82f6'%3E%3Cpath d='M4 6h16v2H4V6zm2-4h12v2H6V2zm16 8H2v12h20V10zm-4 6h-4v-2h4v2z'/%3E%3C/svg%3E">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
+            --success: #10b981;
+            --success-dark: #059669;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --gray-50: #f8fafc;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gray-400: #94a3b8;
+            --gray-500: #64748b;
+            --gray-600: #475569;
+            --gray-700: #334155;
+            --gray-800: #1e293b;
+            --gray-900: #0f172a;
+            --white: #ffffff;
+            --purple: #8b5cf6;
+            --purple-dark: #7c3aed;
+            --whatsapp: #25D366;
+            --whatsapp-dark: #128C7E;
+        }
+
+        body {
+            font-family: 'Cairo', 'Tahoma', sans-serif;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            min-height: 100vh;
+        }
+
+        body.dark-mode {
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+        }
+
+        body.dark-mode .bg-white { background-color: #1e293b !important; }
+        body.dark-mode, body.dark-mode .text-gray-600, body.dark-mode .text-gray-500, body.dark-mode .text-gray-400, body.dark-mode .text-gray-700, body.dark-mode .text-gray-300 { color: #e2e8f0 !important; }
+        body.dark-mode .text-gray-800, body.dark-mode .text-gray-900 { color: #f8fafc !important; }
+        body.dark-mode .border-gray-100, body.dark-mode .border-gray-200, body.dark-mode .border-gray-300 { border-color: #334155 !important; }
+        body.dark-mode .bg-gray-50, body.dark-mode .bg-gray-100 { background-color: #334155 !important; }
+        body.dark-mode .card { background: #1e293b !important; border-color: #334155 !important; }
+        body.dark-mode .transaction-item { border-bottom-color: #334155 !important; }
+        body.dark-mode .footer { background: #1e293b !important; border-top-color: #334155 !important; }
+        body.dark-mode .footer-name, body.dark-mode .footer-copyright { color: #94a3b8 !important; }
+        body.dark-mode .time-stamp { color: #64748b !important; }
+        body.dark-mode .app-title { color: #ffffff !important; }
+        body.dark-mode .app-subtitle { color: #cbd5e1 !important; }
+
+        .header { background: var(--white); box-shadow: 0 1px 2px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 100; }
+        body.dark-mode .header { background: #1e293b; }
+
+        .footer { background: var(--white); border-top: 1px solid var(--gray-200); padding: 12px 16px; margin-top: auto; text-align: center; }
+        body.dark-mode .footer { background: #1e293b; border-top-color: #334155; }
+
+        .page-container { min-height: 100vh; display: flex; flex-direction: column; }
+
+        .card { background: var(--white); border-radius: 16px; padding: 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); border: 1px solid var(--gray-200); transition: all 0.2s; }
+        body.dark-mode .card { background: #1e293b; border-color: #334155; }
+        .card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+
+        .stat-card { border-radius: 16px; padding: 14px; color: white; }
+        .stat-card.blue { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        .stat-card.pink { background: linear-gradient(135deg, #ec4899, #db2777); }
+
+        .action-buttons { position: fixed; bottom: 70px; right: 16px; display: flex; flex-direction: column; gap: 10px; z-index: 100; }
+        .action-btn { padding: 10px 20px; border-radius: 40px; font-weight: 600; font-size: 13px; cursor: pointer; transition: all 0.2s; border: none; font-family: inherit; background: var(--primary); color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+        .action-btn i { font-size: 14px; }
+        .action-btn:hover { transform: translateY(-2px); background: var(--primary-dark); box-shadow: 0 6px 14px rgba(0,0,0,0.25); }
+        body.dark-mode .action-btn { background: #4c1d95; }
+        body.dark-mode .action-btn:hover { background: #5b21b6; }
+
+        .scroll-top-btn { position: fixed; bottom: 70px; left: 16px; width: 45px; height: 45px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; border: none; box-shadow: 0 4px 10px rgba(0,0,0,0.15); transition: all 0.2s; z-index: 100; opacity: 0; visibility: hidden; transition: all 0.3s ease; }
+        .scroll-top-btn.show { opacity: 1; visibility: visible; }
+        .scroll-top-btn:hover { transform: translateY(-2px); background: var(--primary-dark); box-shadow: 0 6px 14px rgba(0,0,0,0.2); }
+        body.dark-mode .scroll-top-btn { background: #4c1d95; }
+        body.dark-mode .scroll-top-btn:hover { background: #5b21b6; }
+
+        .content-area { flex: 1; padding-bottom: 140px; }
+
+        input, select, textarea { border: 1px solid var(--gray-300); border-radius: 12px; padding: 10px 14px; font-size: 14px; width: 100%; font-family: inherit; background: var(--white); transition: all 0.2s; }
+        body.dark-mode input, body.dark-mode select, body.dark-mode textarea { background: #334155; border-color: #475569; color: #f1f5f9; }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(59,130,246,0.2); }
+
+        .transaction-item { padding: 10px; border-bottom: 1px solid var(--gray-100); }
+        body.dark-mode .transaction-item { border-bottom-color: #334155; }
+
+        .persons-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+        @media (min-width: 640px) { .persons-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; } }
+        @media (min-width: 1024px) { .persons-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; } }
+
+        .badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+        .badge-success { background: #10b98120; color: #10b981; }
+        .badge-warning { background: #f59e0b20; color: #f59e0b; }
+
+        .avatar { width: 44px; height: 44px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; }
+
+        .dark-toggle { width: 44px; height: 24px; background: #e2e8f0; border-radius: 30px; cursor: pointer; position: relative; transition: 0.3s; }
+        body.dark-mode .dark-toggle { background: #475569; }
+        .dark-toggle::after { content: '☀️'; position: absolute; top: 2px; left: 3px; width: 20px; height: 20px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; transition: 0.3s; }
+        body.dark-mode .dark-toggle::after { content: '🌙'; left: 21px; background: #1e293b; }
+
+        .edit-icon { width: 32px; height: 32px; background: #3b82f610; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
+        .edit-icon:hover { background: #3b82f630; }
+
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: var(--gray-200); }
+        ::-webkit-scrollbar-thumb { background: var(--gray-400); border-radius: 10px; }
+
+        .container-custom { max-width: 800px; margin: 0 auto; padding: 0 16px; }
+
+        .footer-content { max-width: 800px; margin: 0 auto; text-align: center; }
+        .footer-name { font-size: 12px; font-weight: bold; color: var(--gray-600); margin-bottom: 2px; }
+        .footer-copyright { font-size: 10px; color: var(--gray-400); }
+        .footer-social { display: flex; justify-content: center; gap: 12px; margin-top: 6px; }
+        .footer-social a { color: var(--gray-400); transition: 0.2s; font-size: 13px; }
+        .footer-social a:hover { color: var(--primary); }
+
+        @media (max-width: 640px) {
+            .action-buttons { bottom: 60px; right: 12px; gap: 8px; }
+            .action-btn { padding: 8px 16px; font-size: 12px; }
+            .scroll-top-btn { bottom: 60px; left: 12px; width: 40px; height: 40px; }
+            .content-area { padding-bottom: 130px; }
+        }
+
+        .swal2-popup { font-size: 0.8rem !important; width: 85% !important; max-width: 400px !important; padding: 1rem !important; }
+        .swal2-html-container { margin: 0.3rem 0 !important; }
+        .swal2-input, .swal2-select, .swal2-textarea { padding: 6px 10px !important; font-size: 12px !important; }
+
+        .btn-new-person { background: linear-gradient(135deg, #8b5cf6, #7c3aed) !important; color: white !important; border: none; border-radius: 10px; cursor: pointer; padding: 5px 10px; font-size: 11px; }
+        .btn-new-person:hover { background: linear-gradient(135deg, #7c3aed, #6d28d9) !important; }
+
+        .add-person-btn { background: linear-gradient(135deg, #8b5cf6, #7c3aed) !important; color: white !important; border: none; border-radius: 12px; cursor: pointer; transition: all 0.2s; }
+        .add-person-btn:hover { background: linear-gradient(135deg, #7c3aed, #6d28d9) !important; transform: translateY(-2px); }
+
+        .time-stamp { font-size: 10px; color: var(--gray-400); direction: ltr; display: inline-block; margin-right: 6px; }
+
+        .settings-category { margin-bottom: 15px; }
+        .settings-category-title { font-size: 14px; font-weight: bold; color: var(--gray-700); border-right: 3px solid var(--primary); padding-right: 10px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+        body.dark-mode .settings-category-title { color: #e2e8f0; }
+        .settings-item { background: var(--white); border-radius: 10px; padding: 8px 12px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; border: 1px solid var(--gray-200); transition: all 0.2s; }
+        body.dark-mode .settings-item { background: #1e293b; border-color: #334155; }
+        .settings-item:hover { transform: translateX(-3px); border-color: var(--primary); }
+        .settings-item-info { flex: 1; }
+        .settings-item-title { font-weight: 600; font-size: 13px; color: var(--gray-800); display: flex; align-items: center; gap: 6px; }
+        body.dark-mode .settings-item-title { color: #f1f5f9; }
+        .settings-item-desc { font-size: 10px; color: var(--gray-500); margin-top: 3px; }
+        body.dark-mode .settings-item-desc { color: #94a3b8; }
+        .settings-item-action { flex-shrink: 0; }
+        .settings-btn { padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 500; border: none; cursor: pointer; transition: all 0.2s; }
+        .settings-btn-primary { background: var(--primary); color: white; }
+        .settings-btn-primary:hover { background: var(--primary-dark); }
+        .settings-btn-danger { background: #fee2e2; color: var(--danger); }
+        .settings-btn-danger:hover { background: #fecaca; }
+        body.dark-mode .settings-btn-danger { background: #7f1d1d; color: #fca5a5; }
+        body.dark-mode .settings-btn-danger:hover { background: #991b1b; }
+        .settings-search { position: relative; margin-bottom: 15px; }
+        .settings-search input { padding-right: 35px; background: var(--white); border: 1px solid var(--gray-200); border-radius: 30px; padding: 8px 35px 8px 12px; font-size: 12px; width: 100%; }
+        .settings-search i { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--gray-400); font-size: 12px; }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #cbd5e1;
+            transition: 0.3s;
+            border-radius: 24px;
+        }
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+        input:checked + .toggle-slider {
+            background-color: #3b82f6;
+        }
+        input:checked + .toggle-slider:before {
+            transform: translateX(20px);
+        }
+        body.dark-mode .toggle-slider {
+            background-color: #475569;
+        }
+
+        .receipt-preview { max-width: 100%; max-height: 80px; border-radius: 8px; margin-top: 8px; cursor: pointer; }
+        .receipt-preview-small { width: 30px; height: 30px; object-fit: cover; border-radius: 6px; cursor: pointer; margin-right: 8px; }
+
+        .splash-screen, .password-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #1e3a8a, #4c1d95);
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        body.dark-mode .splash-screen, body.dark-mode .password-screen { background: linear-gradient(135deg, #0f0c29, #24243e); }
+
+        .splash-logo { width: 80px; height: 80px; background: rgba(255,255,255,0.15); border-radius: 24px; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; animation: pulse 1.5s ease-in-out infinite; backdrop-filter: blur(10px); border: 2px solid rgba(255,255,255,0.3); }
+        .splash-logo i { font-size: 40px; color: white; }
+        .splash-title { font-size: 28px; font-weight: bold; color: white; text-align: center; }
+        .splash-subtitle { font-size: 13px; color: rgba(255,255,255,0.8); text-align: center; margin-top: 6px; }
+        .progress-bar { width: 180px; height: 3px; background: rgba(255,255,255,0.2); border-radius: 10px; margin: 25px auto 0; overflow: hidden; }
+        .progress-fill { width: 0%; height: 100%; background: white; border-radius: 10px; animation: progress 3s ease-out forwards; }
+        @keyframes progress { to { width: 100%; } }
+        @keyframes pulse { 0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255,255,255,0.3); } 50% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(255,255,255,0); } }
+
+        .password-card {
+            background: rgba(255,255,255,0.12);
+            backdrop-filter: blur(15px);
+            border-radius: 28px;
+            padding: 28px;
+            width: 85%;
+            max-width: 300px;
+            text-align: center;
+            animation: fadeInUp 0.8s ease-out;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        .password-lock { width: 65px; height: 65px; background: rgba(255,255,255,0.15); border-radius: 18px; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; animation: pulse 1.5s ease-in-out infinite; }
+        .password-lock i { font-size: 32px; color: white; }
+        .password-title { font-size: 18px; font-weight: bold; color: white; }
+        .password-subtitle { font-size: 11px; color: rgba(255,255,255,0.7); margin-bottom: 20px; }
+        .password-input { 
+            width: 100%; 
+            padding: 10px; 
+            background: rgba(255,255,255,0.1); 
+            border: 1px solid rgba(255,255,255,0.2); 
+            border-radius: 50px; 
+            font-size: 17px; 
+            color: white; 
+            text-align: center; 
+            letter-spacing: 5px;
+        }
+        .password-input:focus { outline: none; border-color: rgba(255,255,255,0.5); }
+        .password-btn {
+            width: 100%;
+            padding: 9px;
+            background: #10b981;
+            border: none;
+            border-radius: 50px;
+            font-size: 13px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            margin-top: 12px;
+        }
+        .password-error { color: #f87171; font-size: 11px; margin-top: 8px; min-height: 25px; }
+        .numpad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 15px;
+        }
+        .numpad-btn {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 40px;
+            padding: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            text-align: center;
+        }
+        .numpad-btn:hover { background: rgba(255,255,255,0.2); }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+        .offline-banner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #f59e0b;
+            color: white;
+            text-align: center;
+            padding: 6px;
+            font-size: 12px;
+            z-index: 1000;
+            transform: translateY(-100%);
+            transition: transform 0.3s ease;
+        }
+        .offline-banner.show { transform: translateY(0); }
+
+        .btn-settle-all {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 12px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+        }
+        .btn-settle-all:hover {
+            transform: translateY(-2px);
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            box-shadow: 0 4px 12px rgba(59,130,246,0.3);
+        }
+        body.dark-mode .btn-settle-all {
+            background: linear-gradient(135deg, #4c1d95, #5b21b6);
+        }
+        body.dark-mode .btn-settle-all:hover {
+            background: linear-gradient(135deg, #5b21b6, #6d28d9);
+        }
+
+        .btn-whatsapp-reminder {
+            background: #25D366 !important;
+            color: white !important;
+            border: none;
+            border-radius: 8px;
+            padding: 6px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-whatsapp-reminder:hover {
+            background: #128C7E !important;
+            transform: translateY(-2px);
+        }
+
+        .btn-clear-settled {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 12px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+            margin-top: 12px;
+        }
+        .btn-clear-settled:hover {
+            transform: translateY(-2px);
+            background: linear-gradient(135deg, #d97706, #b45309);
+            box-shadow: 0 4px 12px rgba(245,158,11,0.3);
+        }
+        
+        .export-option-card {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        .export-option-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--primary);
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+        }
+        .export-option-card i {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+        .export-option-card.excel i { color: #10b981; }
+        .export-option-card.pdf i { color: #ef4444; }
+        body.dark-mode .export-option-card {
+            background: #1e293b;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Offline Banner -->
+<div class="offline-banner" id="offlineBanner">
+    <i class="fas fa-wifi"></i> أنت غير متصل بالإنترنت. التطبيق يعمل في وضع عدم الاتصال.
+</div>
+
+<!-- Splash Screen -->
+<div class="splash-screen" id="splashScreen">
+    <div>
+        <div class="splash-logo">
+            <i class="fas fa-calculator"></i>
+        </div>
+        <h1 class="splash-title">حساباتي</h1>
+        <p class="splash-subtitle">إدارة ديونك بذكاء</p>
+        <div class="progress-bar"><div class="progress-fill"></div></div>
+    </div>
+    <div class="splash-footer" style="position: absolute; bottom: 20px; width: 100%; text-align: center; color: rgba(255,255,255,0.5); font-size: 11px;">دينك في حسابك</div>
+</div>
+
+<!-- Password Screen -->
+<div class="password-screen" id="passwordScreen" style="display: none;">
+    <div class="password-card">
+        <div class="password-lock">
+            <i class="fas fa-lock"></i>
+        </div>
+        <h2 class="password-title">تطبيق مقفل</h2>
+        <p class="password-subtitle">أدخل كلمة المرور</p>
+        <input type="password" id="passwordInput" class="password-input" placeholder="...." maxlength="6" autocomplete="off" inputmode="none">
+        <button class="password-btn" id="unlockBtn">فتح التطبيق</button>
+        <div class="password-error" id="passwordError"></div>
+        <div class="numpad" id="numpad">
+            <div class="numpad-btn" data-value="1">1</div><div class="numpad-btn" data-value="2">2</div><div class="numpad-btn" data-value="3">3</div>
+            <div class="numpad-btn" data-value="4">4</div><div class="numpad-btn" data-value="5">5</div><div class="numpad-btn" data-value="6">6</div>
+            <div class="numpad-btn" data-value="7">7</div><div class="numpad-btn" data-value="8">8</div><div class="numpad-btn" data-value="9">9</div>
+            <div class="numpad-btn" data-action="clear"><i class="fas fa-eraser"></i></div>
+            <div class="numpad-btn" data-value="0">0</div>
+            <div class="numpad-btn" data-action="delete"><i class="fas fa-backspace"></i></div>
+        </div>
+    </div>
+</div>
+
+<!-- التطبيق الرئيسي -->
+<div id="mainApp" style="opacity: 0; visibility: hidden; transition: 0.3s;">
+    <div class="page-container">
+        <div class="header">
+            <div class="container-custom" style="padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;">
+                <div onclick="renderDashboard()" style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                    <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #3b82f6, #8b5cf6); border-radius: 14px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-calculator" style="color: white; font-size: 18px;"></i>
+                    </div>
+                    <div>
+                        <h1 style="font-size: 18px; font-weight: bold; color: var(--gray-800);" class="app-title">حساباتي</h1>
+                        <p style="font-size: 10px; color: var(--gray-500);" class="app-subtitle">إدارة ديونك بذكاء</p>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <div class="dark-toggle" onclick="toggleDarkMode()"></div>
+                    <button onclick="showSettings()" style="background: var(--gray-100); border: none; width: 34px; height: 34px; border-radius: 10px; cursor: pointer;"><i class="fas fa-cog" style="color: var(--gray-600);"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-area">
+            <div class="container-custom" id="mainContent" style="margin-top: 16px;">
+                <div style="text-align: center; padding: 40px;">جاري التحميل...</div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div class="footer-content">
+                <div class="footer-name">Mohammed Osama Al-Qarman</div>
+                <div class="footer-copyright">© 2026 جميع الحقوق محفوظة</div>
+                <div class="footer-social">
+                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                    <a href="#"><i class="fab fa-github"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                </div>
+            </div>
+        </div>
+
+        <div class="action-buttons" id="actionButtons"></div>
+
+        <div class="scroll-top-btn" id="scrollTopBtn" onclick="scrollToTop()" title="العودة للأعلى">
+            <i class="fas fa-arrow-up"></i>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Service Worker للتشغيل دون اتصال
+    if ('serviceWorker' in navigator) {
+        const swCode = `
+const CACHE_NAME = 'hisabati-v2';
+const urlsToCache = [
+  '/',
+  '/index.html'
+];
+
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(urlsToCache))
+  );
+});
+
+self.addEventListener('fetch', event => {
+  event.respondWith(
+    caches.match(event.request)
+      .then(response => response || fetch(event.request))
+  );
+});
+        `;
+        
+        const blob = new Blob([swCode], {type: 'application/javascript'});
+        const swUrl = URL.createObjectURL(blob);
+        
+        navigator.serviceWorker.register(swUrl).then(function(reg) {
+            console.log('Service Worker registered successfully');
+        }).catch(function(err) {
+            console.log('Service Worker registration failed:', err);
+        });
+    }
+    
+    // كشف حالة الاتصال
+    function updateOfflineStatus() {
+        const banner = document.getElementById('offlineBanner');
+        if (!navigator.onLine) {
+            banner.classList.add('show');
+        } else {
+            banner.classList.remove('show');
+        }
+    }
+    
+    window.addEventListener('online', updateOfflineStatus);
+    window.addEventListener('offline', updateOfflineStatus);
+    updateOfflineStatus();
+    
+    // متغيرات عامة
+    let currentPage = 'dashboard';
+    let passwordAttempts = 0;
+    let persons = [];
+    let transactions = [];
+    let currentPersonId = null;
+    let autoSaveTimer = null;
+    let isInitialized = false;
+    
+    const CURRENCY_SYMBOL = '₪';
+    function getCurrencySymbol() { return CURRENCY_SYMBOL; }
+    
+    // دوال إدارة كلمة المرور
+    function isPasswordEnabled() {
+        return localStorage.getItem('password_enabled') === 'true';
+    }
+    
+    function getSavedPassword() {
+        return localStorage.getItem('app_password') || '';
+    }
+    
+    function setPasswordEnabled(enabled) {
+        localStorage.setItem('password_enabled', enabled);
+    }
+    
+    function savePassword(p) {
+        localStorage.setItem('app_password', p);
+    }
+    
+    function showPasswordScreen() {
+        if (!isPasswordEnabled() || !getSavedPassword()) {
+            hidePasswordScreen();
+            return;
+        }
+        
+        const el = document.getElementById('passwordScreen');
+        const ma = document.getElementById('mainApp');
+        if (el && ma) {
+            el.style.display = 'flex';
+            el.style.opacity = '1';
+            el.style.visibility = 'visible';
+            ma.style.opacity = '0';
+            ma.style.visibility = 'hidden';
+            document.getElementById('passwordInput').value = '';
+            document.getElementById('passwordError').innerHTML = '';
+            passwordAttempts = 0;
+            setTimeout(() => document.getElementById('passwordInput').focus(), 100);
+        }
+    }
+    
+    function hidePasswordScreen() {
+        const ps = document.getElementById('passwordScreen');
+        const ma = document.getElementById('mainApp');
+        if (ps && ma) {
+            ps.style.opacity = '0';
+            ps.style.visibility = 'hidden';
+            setTimeout(() => {
+                ps.style.display = 'none';
+                ma.style.opacity = '1';
+                ma.style.visibility = 'visible';
+            }, 500);
+        }
+    }
+    
+    function checkPassword() {
+        const inp = document.getElementById('passwordInput');
+        const err = document.getElementById('passwordError');
+        const savedPass = getSavedPassword();
+        
+        if (!isPasswordEnabled() || !savedPass) {
+            hidePasswordScreen();
+            return;
+        }
+        
+        if (inp.value === savedPass) {
+            hidePasswordScreen();
+        } else {
+            passwordAttempts++;
+            const remaining = 5 - passwordAttempts;
+            if (passwordAttempts >= 5) {
+                err.innerHTML = 'تجاوزت المحاولات. سيتم إعادة التحميل.';
+                setTimeout(() => location.reload(), 2000);
+            } else {
+                err.innerHTML = `كلمة مرور خاطئة! متبقي ${remaining} محاولات`;
+                inp.value = '';
+                inp.focus();
+            }
+        }
+    }
+    
+    function setupNumpad() {
+        document.querySelectorAll('.numpad-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const inp = document.getElementById('passwordInput');
+                const val = btn.getAttribute('data-value');
+                const act = btn.getAttribute('data-action');
+                if (act === 'clear') inp.value = '';
+                else if (act === 'delete') inp.value = inp.value.slice(0, -1);
+                else if (val && inp.value.length < 6) inp.value += val;
+                inp.focus();
+            });
+        });
+    }
+    
+    function hideSplash() {
+        const splash = document.getElementById('splashScreen');
+        if (splash) {
+            splash.style.opacity = '0';
+            splash.style.visibility = 'hidden';
+            setTimeout(() => {
+                splash.style.display = 'none';
+                if (isPasswordEnabled() && getSavedPassword()) {
+                    showPasswordScreen();
+                    setupNumpad();
+                } else {
+                    hidePasswordScreen();
+                }
+            }, 500);
+        }
+    }
+    
+    function loadData() {
+        try {
+            const p = localStorage.getItem('hisabati_persons');
+            const t = localStorage.getItem('hisabati_transactions');
+            persons = p ? JSON.parse(p) : [];
+            transactions = t ? JSON.parse(t) : [];
+        } catch(e) { persons = []; transactions = []; }
+    }
+    
+    function saveData(showToast) {
+        try {
+            localStorage.setItem('hisabati_persons', JSON.stringify(persons));
+            localStorage.setItem('hisabati_transactions', JSON.stringify(transactions));
+            if (showToast) showNotification('تم الحفظ', 'success');
+        } catch(e) { showNotification('خطأ', 'error'); }
+    }
+    
+    function enableAutoSave() { if (autoSaveTimer) clearInterval(autoSaveTimer); autoSaveTimer = setInterval(() => { if (isInitialized) saveData(false); }, 5000); }
+    
+    function showNotification(msg, type) {
+        Swal.fire({ title: msg, icon: type, toast: true, position: 'top-end', showConfirmButton: false, timer: 1500, background: type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6', color: 'white' });
+    }
+    
+    function getStats() {
+        let paid = 0, received = 0;
+        transactions.forEach(t => { if (!t.is_settled) { if (t.amount > 0) paid += t.amount; else received += Math.abs(t.amount); } });
+        return { totalPaidByMe: paid, totalPaidToMe: received, netBalance: paid - received };
+    }
+    
+    function getPersonBalance(id) { let b = 0; transactions.forEach(t => { if (t.person_id === id && !t.is_settled) b += t.amount; }); return b; }
+    
+    function copySummary() {
+        const s = getStats();
+        const text = `📊 ملخص حساباتي\n\n💰 المبلغ الذي دفعته: ${s.totalPaidByMe.toFixed(2)} ${getCurrencySymbol()}\n💰 المبلغ الذي دفع لي: ${s.totalPaidToMe.toFixed(2)} ${getCurrencySymbol()}\n📈 صافي المبلغ: ${s.netBalance >= 0 ? '+' : ''}${s.netBalance.toFixed(2)} ${getCurrencySymbol()}`;
+        navigator.clipboard.writeText(text);
+        showNotification('تم نسخ الملخص', 'success');
+    }
+    
+    function sendWhatsApp(id) {
+        const p = persons.find(p => p.id === id);
+        if (!p || !p.phone) { 
+            Swal.fire('رقم الجوال غير مسجل', 'الرجاء إضافة رقم الجوال للشخص أولاً', 'warning');
+            return; 
+        }
+        const b = getPersonBalance(id);
+        const msg = `📝 *تذكير دين* 📝\n\n👤 *الاسم:* ${p.name}\n💰 *المبلغ:* ${Math.abs(b).toFixed(2)} ${getCurrencySymbol()}\n📌 *الحالة:* ${b > 0 ? 'متبقي عليك' : 'متبقي لك'}\n\n🕌 بارك الله فيك ونفع بك`;
+        window.open(`https://wa.me/${p.phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(msg)}`, '_blank');
+    }
+    
+    async function clearSettledTransactions(personId) {
+        const person = persons.find(p => p.id === personId);
+        const settledTransactions = transactions.filter(t => t.person_id === personId && t.is_settled === true);
+        
+        if (settledTransactions.length === 0) {
+            showNotification('لا توجد معاملات مسددة لحذفها', 'info');
+            return;
+        }
+        
+        const result = await Swal.fire({
+            title: 'مسح المعاملات المسددة',
+            html: `هل تريد مسح <strong>${settledTransactions.length}</strong> معاملة مسددة مع <strong>${person?.name}</strong>؟<br><small>لا يمكن التراجع عن هذا الإجراء</small>`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'نعم، امسح',
+            cancelButtonText: 'إلغاء',
+            confirmButtonColor: '#f59e0b'
+        });
+        
+        if (result.isConfirmed) {
+            transactions = transactions.filter(t => !(t.person_id === personId && t.is_settled === true));
+            saveData(true);
+            showNotification(`تم مسح ${settledTransactions.length} معاملة مسددة`, 'success');
+            showPersonDetails(personId);
+        }
+    }
+    
+    async function exportToExcel() {
+        const stats = getStats();
+        const allTransactions = [...transactions].sort((a,b) => new Date(b.datetime) - new Date(a.datetime));
+        const symbol = getCurrencySymbol();
+        
+        const data = [
+            ['تقرير حساباتي'],
+            [`تاريخ التصدير: ${new Date().toLocaleDateString('ar-SA')}`],
+            [],
+            ['الملخص العام'],
+            ['البيان', 'المبلغ'],
+            [`المبلغ الذي دفعته`, `${stats.totalPaidByMe.toFixed(2)} ${symbol}`],
+            [`المبلغ الذي دفع لي`, `${stats.totalPaidToMe.toFixed(2)} ${symbol}`],
+            [`صافي المبلغ`, `${stats.netBalance >= 0 ? '+' : ''}${stats.netBalance.toFixed(2)} ${symbol}`],
+            [],
+            ['تفاصيل المعاملات'],
+            ['#', 'التاريخ', 'الشخص', 'النوع', 'السبب', 'المبلغ', 'الحالة']
+        ];
+        
+        allTransactions.forEach((t, i) => {
+            const p = persons.find(p => p.id === t.person_id);
+            const isPaid = t.amount > 0;
+            data.push([
+                i + 1,
+                t.date,
+                p?.name || 'غير معروف',
+                isPaid ? 'أنا دفعت له' : 'هو دفع لي',
+                t.reason || '-',
+                `${Math.abs(t.amount)} ${symbol}`,
+                t.is_settled ? 'مسددة' : 'غير مسددة'
+            ]);
+        });
+        
+        const ws = XLSX.utils.aoa_to_sheet(data);
+        ws['!cols'] = [{wch:5},{wch:12},{wch:15},{wch:12},{wch:15},{wch:12},{wch:10}];
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'تقرير حساباتي');
+        XLSX.writeFile(wb, `حساباتي_تقرير_${new Date().toISOString().split('T')[0]}.xlsx`);
+        showNotification('تم تصدير التقرير كملف Excel بنجاح', 'success');
+    }
+    
+    async function exportToPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({
+            orientation: 'portrait',
+            unit: 'mm',
+            format: 'a4'
+        });
+        
+        const stats = getStats();
+        const allTransactions = [...transactions].sort((a,b) => new Date(b.datetime) - new Date(a.datetime));
+        const symbol = getCurrencySymbol();
+        
+        let yPos = 20;
+        
+        doc.setFontSize(20);
+        doc.setTextColor(59, 130, 246);
+        doc.text('📊 حساباتي - التقرير الشامل', 105, yPos, { align: 'center' });
+        yPos += 10;
+        
+        doc.setFontSize(10);
+        doc.setTextColor(100, 116, 139);
+        doc.text(`تاريخ التصدير: ${new Date().toLocaleDateString('ar-SA')}`, 105, yPos, { align: 'center' });
+        yPos += 15;
+        
+        doc.setFillColor(240, 249, 255);
+        doc.rect(20, yPos, 170, 35, 'F');
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(11);
+        
+        doc.text(`💰 المبلغ الذي دفعته: ${stats.totalPaidByMe.toFixed(2)} ${symbol}`, 30, yPos + 10);
+        doc.text(`💳 المبلغ الذي دفع لي: ${stats.totalPaidToMe.toFixed(2)} ${symbol}`, 30, yPos + 20);
+        doc.text(`📈 صافي المبلغ: ${stats.netBalance >= 0 ? '+' : ''}${stats.netBalance.toFixed(2)} ${symbol}`, 30, yPos + 30);
+        yPos += 45;
+        
+        doc.setFontSize(14);
+        doc.setTextColor(59, 130, 246);
+        doc.text('📋 تفاصيل المعاملات', 105, yPos, { align: 'center' });
+        yPos += 10;
+        
+        doc.setFillColor(59, 130, 246);
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(9);
+        
+        const headers = ['#', 'التاريخ', 'الشخص', 'النوع', 'السبب', 'المبلغ', 'الحالة'];
+        const colWidths = [10, 25, 30, 25, 30, 25, 20];
+        let xPos = 20;
+        
+        for (let i = 0; i < headers.length; i++) {
+            doc.rect(xPos, yPos, colWidths[i], 8, 'F');
+            doc.text(headers[i], xPos + colWidths[i] / 2, yPos + 5.5, { align: 'center' });
+            xPos += colWidths[i];
+        }
+        yPos += 8;
+        
+        doc.setTextColor(0, 0, 0);
+        let rowCount = 0;
+        
+        for (let i = 0; i < allTransactions.length && rowCount < 25; i++) {
+            const t = allTransactions[i];
+            const p = persons.find(p => p.id === t.person_id);
+            const isPaid = t.amount > 0;
+            
+            xPos = 20;
+            const rowData = [
+                (i + 1).toString(),
+                t.date,
+                p?.name.substring(0, 15) || 'غير معروف',
+                isPaid ? 'أنا دفعت له' : 'هو دفع لي',
+                (t.reason || '-').substring(0, 15),
+                `${Math.abs(t.amount)} ${symbol}`,
+                t.is_settled ? 'مسددة' : 'غير مسددة'
+            ];
+            
+            for (let j = 0; j < rowData.length; j++) {
+                doc.rect(xPos, yPos, colWidths[j], 7);
+                doc.text(rowData[j], xPos + colWidths[j] / 2, yPos + 5, { align: 'center' });
+                xPos += colWidths[j];
+            }
+            yPos += 7;
+            rowCount++;
+            
+            if (yPos > 270 && i < allTransactions.length - 1) {
+                doc.addPage();
+                yPos = 20;
+            }
+        }
+        
+        doc.setFontSize(8);
+        doc.setTextColor(128, 128, 128);
+        doc.text(`تقرير من تطبيق حساباتي - تم التصدير بتاريخ ${new Date().toLocaleDateString('ar-SA')}`, 105, 285, { align: 'center' });
+        
+        doc.save(`حساباتي_تقرير_${new Date().toISOString().split('T')[0]}.pdf`);
+        showNotification('تم تصدير التقرير كملف PDF بنجاح', 'success');
+    }
+    
+    async function exportData() {
+        const result = await Swal.fire({
+            title: '📤 تصدير البيانات',
+            html: `
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 10px;">
+                    <div class="export-option-card excel" onclick="Swal.clickConfirm(); window.exportToExcel()" style="cursor: pointer;">
+                        <i class="fas fa-file-excel"></i>
+                        <div style="font-weight: bold; margin-top: 8px;">Excel</div>
+                        <div style="font-size: 11px; color: #64748b; margin-top: 4px;">ملف XLSX</div>
+                    </div>
+                    <div class="export-option-card pdf" onclick="Swal.clickConfirm(); window.exportToPDF()" style="cursor: pointer;">
+                        <i class="fas fa-file-pdf"></i>
+                        <div style="font-weight: bold; margin-top: 8px;">PDF</div>
+                        <div style="font-size: 11px; color: #64748b; margin-top: 4px;">ملف PDF</div>
+                    </div>
+                </div>
+                <div style="margin-top: 12px; font-size: 11px; color: #64748b; text-align: center;">
+                    <i class="fas fa-info-circle"></i> اختر الصيغة المناسبة لتصدير التقرير
+                </div>
+            `,
+            showConfirmButton: false,
+            showCancelButton: true,
+            cancelButtonText: 'إلغاء',
+            width: '400px'
+        });
+    }
+    
+    async function importData() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.xlsx,.xls';
+        input.onchange = async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const result = await Swal.fire({
+                title: '⚠️ تأكيد الاستيراد',
+                html: `
+                    <div style="text-align: center;">
+                        <i class="fas fa-database" style="font-size: 48px; color: #f59e0b; margin-bottom: 12px;"></i>
+                        <p style="margin-bottom: 8px;">سيتم استبدال البيانات الحالية بالبيانات المستوردة</p>
+                        <p style="font-size: 12px; color: #64748b;">⚠️ لا يمكن التراجع عن هذا الإجراء</p>
+                    </div>
+                `,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'نعم، استيراد',
+                cancelButtonText: 'إلغاء',
+                confirmButtonColor: '#ef4444',
+                width: '380px'
+            });
+            
+            if (result.isConfirmed) {
+                try {
+                    const data = await file.arrayBuffer();
+                    const workbook = XLSX.read(data);
+                    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+                    
+                    let startIndex = json.findIndex(row => row[0] === 'تفاصيل المعاملات');
+                    if (startIndex !== -1) {
+                        const transactionsData = json.slice(startIndex + 2);
+                        const newPersons = [];
+                        const newTransactions = [];
+                        
+                        for (let row of transactionsData) {
+                            if (row[0] && row[1] && row[2]) {
+                                let person = newPersons.find(p => p.name === row[2]);
+                                if (!person) {
+                                    person = { id: Date.now() + Math.random(), name: row[2], phone: '' };
+                                    newPersons.push(person);
+                                }
+                                
+                                const amount = parseFloat(row[5]) || 0;
+                                const isPaid = row[3] === 'أنا دفعت له';
+                                
+                                newTransactions.push({
+                                    id: Date.now() + Math.random(),
+                                    person_id: person.id,
+                                    amount: isPaid ? amount : -amount,
+                                    reason: row[4] !== '-' ? row[4] : '',
+                                    date: row[1],
+                                    datetime: row[1] + ' 00:00:00',
+                                    is_settled: row[6] === 'مسددة',
+                                    notes: '',
+                                    receiptImage: null
+                                });
+                            }
+                        }
+                        
+                        persons = newPersons;
+                        transactions = newTransactions;
+                    }
+                    
+                    saveData(true);
+                    renderDashboard();
+                    
+                    Swal.fire({
+                        title: '✅ تم الاستيراد بنجاح',
+                        text: `تم استيراد ${transactions.length} معاملة`,
+                        icon: 'success',
+                        confirmButtonText: 'حسنا',
+                        width: '350px'
+                    });
+                } catch(e) {
+                    console.error(e);
+                    Swal.fire('خطأ', 'الملف غير صالح أو تالف', 'error');
+                }
+            }
+        };
+        input.click();
+    }
+    
+    function showUserGuide() {
+        Swal.fire({
+            title: '📖 دليل المستخدم',
+            html: `<div style="text-align:right;max-height:350px;overflow-y:auto;"><div style="margin-bottom:12px;"><h3 style="color:#3b82f6;margin-bottom:3px;">➕ إضافة دين جديد</h3><p style="font-size:12px;">1. اضغط على زر "دين جديد"<br>2. اختر الشخص<br>3. حدد نوع الدين<br>4. أدخل المبلغ والسبب<br>5. يمكنك إرفاق صورة للفاتورة<br>6. اضغط حفظ أو Enter</p></div><div style="margin-bottom:12px;"><h3 style="color:#3b82f6;margin-bottom:3px;">👥 إدارة الأشخاص</h3><p style="font-size:12px;">1. اضغط على زر "الأشخاص"<br>2. يمكنك إضافة، تعديل، أو حذف أي شخص<br>3. اضغط على اسم الشخص لعرض معاملاته<br>4. يمكنك إرسال تذكير واتساب مباشرة</p></div><div style="margin-bottom:12px;"><h3 style="color:#3b82f6;margin-bottom:3px;">📊 متابعة الديون</h3><p style="font-size:12px;">1. الشاشة الرئيسية تعرض ملخص جميع ديونك<br>2. اللون الأخضر: أنا دفعت له<br>3. اللون الأحمر: هو دفع لي<br>4. اضغط على "تسوية" لتحديد دين كمسدد</p></div><div><h3 style="color:#3b82f6;margin-bottom:3px;">🔐 شاشة القفل</h3><p style="font-size:12px;">يمكنك تفعيل قفل التطبيق من الإعدادات لحماية بياناتك</p></div></div>`,
+            width: '90%',
+            maxWidth: '400px',
+            confirmButtonText: 'فهمت'
+        });
+    }
+    
+    function showAbout() {
+        Swal.fire({
+            title: '📱 عن التطبيق',
+            html: `<div style="text-align:center;"><i class="fas fa-calculator" style="font-size:45px;color:#3b82f6;margin-bottom:8px;"></i><h3 style="font-size:20px;font-weight:bold;margin:5px 0;">حساباتي</h3><p style="color:#666;margin-bottom:12px;">إدارة ديونك بذكاء واحترافية</p><div style="background:#f0f9ff;padding:10px;border-radius:10px;margin:8px 0;text-align:right;"><p><strong>📌 الإصدار:</strong> 2.0.0</p><p><strong>👨‍💻 المطور:</strong> Mohammed Osama Al-Qarman</p><p><strong>📅 تاريخ الإصدار:</strong> 2026</p></div><p style="font-size:11px;color:#888;margin-top:8px;">© 2026 جميع الحقوق محفوظة</p></div>`,
+            confirmButtonText: 'حسنا',
+            width: '90%',
+            maxWidth: '380px'
+        });
+    }
+    
+    async function managePassword() {
+        const isEnabled = isPasswordEnabled();
+        const hasPassword = getSavedPassword();
+        
+        const { value: action } = await Swal.fire({
+            title: 'إعدادات قفل التطبيق',
+            html: `
+                <div style="text-align: right;">
+                    <div style="margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
+                        <span>🔒 تفعيل قفل التطبيق</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="enablePasswordToggle" ${isEnabled ? 'checked' : ''}>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div id="passwordSettingsSection" style="display: ${isEnabled ? 'block' : 'none'};">
+                        <hr style="margin: 10px 0;">
+                        <button id="changePasswordBtn" style="width: 100%; padding: 8px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer; margin-top: 8px;">
+                            🔐 تغيير كلمة المرور
+                        </button>
+                        ${hasPassword ? `<button id="removePasswordBtn" style="width: 100%; padding: 8px; background: #ef4444; color: white; border: none; border-radius: 8px; cursor: pointer; margin-top: 8px;">
+                            🗑️ إلغاء القفل وإزالة كلمة المرور
+                        </button>` : ''}
+                    </div>
+                </div>
+            `,
+            showConfirmButton: false,
+            showCancelButton: true,
+            cancelButtonText: 'إغلاق',
+            width: '380px',
+            didOpen: () => {
+                const toggle = document.getElementById('enablePasswordToggle');
+                const section = document.getElementById('passwordSettingsSection');
+                const changeBtn = document.getElementById('changePasswordBtn');
+                const removeBtn = document.getElementById('removePasswordBtn');
+                
+                toggle.addEventListener('change', async (e) => {
+                    if (e.target.checked) {
+                        if (!getSavedPassword()) {
+                            const { value: newPass } = await Swal.fire({
+                                title: 'تعيين كلمة المرور',
+                                input: 'password',
+                                inputPlaceholder: 'أدخل كلمة المرور (4-6 أرقام)',
+                                inputAttributes: { maxlength: 6 },
+                                showCancelButton: true,
+                                confirmButtonText: 'تفعيل',
+                                width: '350px'
+                            });
+                            if (newPass && newPass.length >= 4) {
+                                savePassword(newPass);
+                                setPasswordEnabled(true);
+                                section.style.display = 'block';
+                                Swal.fire('تم التفعيل', 'تم تفعيل قفل التطبيق', 'success');
+                            } else {
+                                toggle.checked = false;
+                                if (newPass && newPass.length < 4) {
+                                    Swal.fire('خطأ', 'كلمة المرور يجب أن تكون 4 أحرف على الأقل', 'error');
+                                }
+                            }
+                        } else {
+                            setPasswordEnabled(true);
+                            section.style.display = 'block';
+                            Swal.fire('تم التفعيل', 'تم تفعيل قفل التطبيق', 'success');
+                        }
+                    } else {
+                        setPasswordEnabled(false);
+                        section.style.display = 'none';
+                        Swal.fire('تم الإلغاء', 'تم إلغاء تفعيل قفل التطبيق', 'info');
+                    }
+                });
+                
+                if (changeBtn) {
+                    changeBtn.addEventListener('click', async () => {
+                        const { value: oldPass } = await Swal.fire({
+                            title: 'تغيير كلمة المرور',
+                            input: 'password',
+                            inputPlaceholder: 'كلمة المرور الحالية',
+                            showCancelButton: true,
+                            width: '350px'
+                        });
+                        
+                        if (oldPass === getSavedPassword()) {
+                            const { value: newPass } = await Swal.fire({
+                                title: 'كلمة المرور الجديدة',
+                                input: 'password',
+                                inputPlaceholder: 'كلمة المرور الجديدة (4-6 أرقام)',
+                                inputAttributes: { maxlength: 6 },
+                                showCancelButton: true,
+                                width: '350px'
+                            });
+                            
+                            if (newPass && newPass.length >= 4) {
+                                savePassword(newPass);
+                                Swal.fire('تم التغيير', 'تم تغيير كلمة المرور بنجاح', 'success');
+                            } else if (newPass && newPass.length < 4) {
+                                Swal.fire('خطأ', 'كلمة المرور يجب أن تكون 4 أحرف على الأقل', 'error');
+                            }
+                        } else if (oldPass) {
+                            Swal.fire('خطأ', 'كلمة المرور الحالية غير صحيحة', 'error');
+                        }
+                    });
+                }
+                
+                if (removeBtn) {
+                    removeBtn.addEventListener('click', async () => {
+                        const result = await Swal.fire({
+                            title: 'إلغاء قفل التطبيق',
+                            text: 'هل أنت متأكد؟ سيتم إزالة كلمة المرور نهائياً',
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonText: 'نعم',
+                            cancelButtonText: 'إلغاء',
+                            width: '350px'
+                        });
+                        if (result.isConfirmed) {
+                            localStorage.removeItem('app_password');
+                            setPasswordEnabled(false);
+                            section.style.display = 'none';
+                            toggle.checked = false;
+                            Swal.fire('تم', 'تم إلغاء قفل التطبيق', 'success');
+                        }
+                    });
+                }
+            }
+        });
+    }
+    
+    function showSettings() {
+        let searchTerm = '';
+        
+        const renderSettings = () => {
+            const categories = [
+                { title: '🔐 الأمان', icon: 'fa-shield-alt', items: [
+                    { id: 'managePassword', icon: 'fa-lock', title: 'قفل التطبيق', desc: 'تفعيل شاشة القفل وإدارة كلمة المرور', action: managePassword, color: 'primary', btnText: 'إدارة' }
+                ] },
+                { title: '📦 البيانات', icon: 'fa-database', items: [
+                    { id: 'exportData', icon: 'fa-file-export', title: 'تصدير البيانات', desc: 'حفظ نسخة احتياطية (Excel / PDF)', action: exportData, color: 'primary', btnText: 'تصدير' },
+                    { id: 'importData', icon: 'fa-file-import', title: 'استيراد بيانات', desc: 'استعادة بيانات من ملف (Excel)', action: importData, color: 'primary', btnText: 'استيراد' },
+                    { id: 'clearHistory', icon: 'fa-trash-alt', title: 'مسح السجل', desc: 'حذف جميع المعاملات مع الاحتفاظ بالأشخاص', action: clearHistory, color: 'danger', btnText: 'مسح' },
+                    { id: 'clearAll', icon: 'fa-radiation', title: 'مسح جميع البيانات', desc: 'حذف كل شيء (أشخاص ومعاملات)', action: clearAllData, color: 'danger', btnText: 'مسح الكل' }
+                ] },
+                { title: 'ℹ️ المساعدة والدعم', icon: 'fa-life-ring', items: [
+                    { id: 'userGuide', icon: 'fa-book-open', title: 'دليل المستخدم', desc: 'تعليمات استخدام التطبيق', action: showUserGuide, color: 'primary', btnText: 'عرض' },
+                    { id: 'shareApp', icon: 'fa-share-alt', title: 'مشاركة التطبيق', desc: 'مشاركة رابط التطبيق مع الأصدقاء', action: () => { navigator.clipboard.writeText(window.location.href); showNotification('تم نسخ رابط التطبيق', 'success'); }, color: 'primary', btnText: 'مشاركة' },
+                    { id: 'contactUs', icon: 'fa-envelope', title: 'اتصل بنا', desc: 'للاقتراحات والاستفسارات', action: () => { window.location.href = 'mailto:support@hisabati.com'; }, color: 'primary', btnText: 'مراسلة' },
+                    { id: 'about', icon: 'fa-info-circle', title: 'عن التطبيق', desc: 'الإصدار والمطور', action: showAbout, color: 'primary', btnText: 'عرض' }
+                ] }
+            ];
+            
+            let filtered = categories.map(cat => ({
+                ...cat,
+                items: cat.items.filter(item => item.title.includes(searchTerm) || item.desc.includes(searchTerm))
+            })).filter(cat => cat.items.length > 0);
+            
+            let html = `<div class="settings-search"><i class="fas fa-search"></i><input type="text" id="settingsSearchInput" placeholder="بحث في الإعدادات..." value="${searchTerm}" style="width:100%;"></div>`;
+            
+            filtered.forEach(cat => {
+                html += `<div class="settings-category"><div class="settings-category-title"><i class="fas ${cat.icon}"></i> ${cat.title}</div>`;
+                cat.items.forEach(item => {
+                    html += `<div class="settings-item"><div class="settings-item-info"><div class="settings-item-title"><i class="fas ${item.icon}"></i> ${item.title}</div><div class="settings-item-desc">${item.desc}</div></div><div class="settings-item-action"><button onclick="(async()=>{await ${item.action.name}(); if(document.getElementById('settingsContainer')) showSettings();})()" class="settings-btn settings-btn-${item.color}">${item.btnText}</button></div></div>`;
+                });
+                html += `</div>`;
+            });
+            
+            document.getElementById('settingsContainer').innerHTML = html;
+            const searchInput = document.getElementById('settingsSearchInput');
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => { searchTerm = e.target.value; renderSettings(); });
+            }
+        };
+        
+        Swal.fire({
+            title: 'الإعدادات',
+            html: '<div id="settingsContainer" style="max-height: 450px; overflow-y: auto; text-align: right;"></div>',
+            showConfirmButton: false,
+            showCancelButton: true,
+            cancelButtonText: 'إغلاق',
+            width: '95%',
+            maxWidth: '480px'
+        }).then(() => {});
+        renderSettings();
+    }
+    
+    function viewReceiptImage(imgData) { Swal.fire({ imageUrl: imgData, imageAlt: 'الفاتورة', width: '90%', maxWidth: '400px', confirmButtonText: 'إغلاق' }); }
+    
+    function updateActionButtons() {
+        const container = document.getElementById('actionButtons');
+        if (!container) return;
+        
+        if (currentPage === 'dashboard') {
+            container.innerHTML = `
+                <button onclick="showPersonsList()" class="action-btn"><i class="fas fa-users"></i> الأشخاص</button>
+                <button onclick="showAddTransaction()" class="action-btn"><i class="fas fa-plus"></i> دين جديد</button>
+            `;
+        } else if (currentPage === 'persons') {
+            container.innerHTML = `
+                <button onclick="renderDashboard()" class="action-btn"><i class="fas fa-home"></i> الرئيسية</button>
+                <button onclick="showAddTransaction()" class="action-btn"><i class="fas fa-plus"></i> دين جديد</button>
+            `;
+        } else {
+            container.innerHTML = `
+                <button onclick="renderDashboard()" class="action-btn"><i class="fas fa-home"></i> الرئيسية</button>
+                <button onclick="showPersonsList()" class="action-btn"><i class="fas fa-users"></i> الأشخاص</button>
+                <button onclick="showAddTransaction()" class="action-btn"><i class="fas fa-plus"></i> دين جديد</button>
+            `;
+        }
+    }
+    
+    window.addEventListener('scroll', function() {
+        const scrollBtn = document.getElementById('scrollTopBtn');
+        if (window.scrollY > 300) scrollBtn.classList.add('show');
+        else scrollBtn.classList.remove('show');
+    });
+
+    function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
+    
+    function getCurrentDateTime() {
+        const n = new Date();
+        return { date: `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`, time: `${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}:${String(n.getSeconds()).padStart(2,'0')}`, full: `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')} ${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}:${String(n.getSeconds()).padStart(2,'0')}` };
+    }
+    
+    function renderDashboard() {
+        currentPage = 'dashboard';
+        updateActionButtons();
+        currentPersonId = null;
+        const s = getStats();
+        const recent = [...transactions]
+            .filter(t => !t.is_settled)
+            .sort((a,b) => new Date(b.datetime) - new Date(a.datetime))
+            .slice(0, 5);
+        const symbol = getCurrencySymbol();
+        
+        let html = `<div style="display: flex; flex-direction: column; gap: 16px;"><div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;"><div class="stat-card blue"><div style="display: flex; justify-content: space-between; align-items: center;"><i class="fas fa-arrow-circle-right" style="font-size: 24px; opacity: 0.8;"></i><div style="text-align: left;"><div style="font-size: 20px; font-weight: bold;">${s.totalPaidByMe.toFixed(2)} ${symbol}</div><div style="font-size: 11px; opacity: 0.9;">المبلغ الذي دفعته</div></div></div></div><div class="stat-card pink"><div style="display: flex; justify-content: space-between; align-items: center;"><i class="fas fa-arrow-circle-left" style="font-size: 24px; opacity: 0.8;"></i><div style="text-align: left;"><div style="font-size: 20px; font-weight: bold;">${s.totalPaidToMe.toFixed(2)} ${symbol}</div><div style="font-size: 11px; opacity: 0.9;">المبلغ الذي دفع لي</div></div></div></div></div><div class="card" style="text-align: center;"><div style="color: var(--gray-500); font-size: 11px;">صافي المبلغ</div><div style="font-size: 28px; font-weight: bold; ${s.netBalance >= 0 ? 'color: #10b981;' : 'color: #ef4444;'}">${s.netBalance >= 0 ? '+' : ''}${s.netBalance.toFixed(2)} ${symbol}</div><div style="color: var(--gray-500); font-size: 11px; margin-top: 4px;">${s.netBalance >= 0 ? 'المبلغ المتبقي عليك' : 'المبلغ المتبقي لك'}</div></div><div class="card"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;"><h3 style="font-size: 14px; font-weight: bold;"><i class="fas fa-history" style="color: #3b82f6; margin-left: 6px;"></i> آخر المعاملات</h3><button onclick="showAllTransactions()" style="font-size: 11px; color: #3b82f6; background: none; border: none; cursor: pointer;">عرض الكل</button></div><div style="max-height: 300px; overflow-y: auto;">`;
+        
+        if (recent.length) {
+            recent.forEach(t => {
+                const p = persons.find(p => p.id === t.person_id);
+                const isPaid = t.amount > 0;
+                html += `<div class="transaction-item" style="display: flex; justify-content: space-between; align-items: center;"><div style="display: flex; gap: 10px; align-items: center; flex: 1; min-width: 0;"><div class="avatar" style="width: 38px; height: 38px; font-size: 14px;"><i class="fas fa-user"></i></div><div style="min-width: 0; flex: 1;"><div style="font-weight: 600; font-size: 13px;">${p?.name || 'غير معروف'}</div><div style="font-size: 11px; color: var(--gray-500);">${t.reason || 'بدون سبب'} <span class="time-stamp">📅 ${t.datetime}</span></div>${t.receiptImage ? `<img src="${t.receiptImage}" class="receipt-preview-small" onclick="event.stopPropagation();viewReceiptImage('${t.receiptImage}')">` : ''}</div></div><div style="text-align: left;"><div style="font-weight: bold; font-size: 14px; ${isPaid ? 'color: #10b981;' : 'color: #ef4444;'}">${Math.abs(t.amount)} ${symbol}</div><div style="font-size: 10px;">${isPaid ? 'أنا دفعت له' : 'هو دفع لي'}</div></div></div>`;
+            });
+        } else {
+            html += `<div style="text-align: center; padding: 30px; color: var(--gray-500);">لا توجد معاملات غير مسددة</div>`;
+        }
+        
+        html += `</div></div></div>`;
+        document.getElementById('mainContent').innerHTML = html;
+        scrollToTop();
+    }
+    
+    function showPersonsList() {
+        currentPage = 'persons';
+        updateActionButtons();
+        currentPersonId = null;
+        const symbol = getCurrencySymbol();
+        let html = `<div class="persons-grid">`;
+        
+        persons.forEach(p => {
+            const b = getPersonBalance(p.id);
+            const isPos = b > 0;
+            html += `<div class="card" style="cursor: pointer;" onclick="showPersonDetails(${p.id})"><div style="display: flex; justify-content: space-between; align-items: center;"><div style="display: flex; gap: 10px; align-items: center; flex: 1; min-width: 0;"><div class="avatar"><i class="fas fa-user"></i></div><div style="min-width: 0;"><div style="font-weight: bold; font-size: 14px;">${p.name}</div>${p.phone ? `<div style="font-size: 11px; color: var(--gray-500);"><i class="fas fa-phone"></i> ${p.phone}</div>` : ''}</div></div><div style="text-align: left;"><div style="font-weight: bold; ${isPos ? 'color: #10b981;' : 'color: #ef4444;'}">${Math.abs(b).toFixed(2)} ${symbol}</div><div style="font-size: 11px;">${isPos ? 'أنا دفعت له' : 'هو دفع لي'}</div></div></div><div style="display: flex; gap: 8px; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--gray-200);"><button onclick="event.stopPropagation(); editPerson(${p.id})" style="flex: 1; padding: 6px; background: var(--gray-100); border: none; border-radius: 8px; font-size: 11px; cursor: pointer;"><i class="fas fa-edit"></i> تعديل</button><button onclick="event.stopPropagation(); sendWhatsApp(${p.id})" class="btn-whatsapp-reminder" style="flex: 1;"><i class="fab fa-whatsapp"></i> تذكير</button><button onclick="event.stopPropagation(); deletePerson(${p.id})" style="flex: 1; padding: 6px; background: #ef444420; border: none; border-radius: 8px; font-size: 11px; color: #ef4444; cursor: pointer;"><i class="fas fa-trash"></i> حذف</button></div></div>`;
+        });
+        
+        html += `</div><div style="margin-top: 16px;"><button onclick="addNewPerson()" class="add-person-btn" style="width: 100%; padding: 10px; font-size: 14px;"><i class="fas fa-user-plus"></i> إضافة شخص جديد</button></div>`;
+        document.getElementById('mainContent').innerHTML = html;
+        scrollToTop();
+    }
+    
+    async function editPersonDirectly(id) {
+        const p = persons.find(p => p.id === id);
+        if (!p) return;
+        const { value: v } = await Swal.fire({
+            title: 'تعديل الشخص',
+            html: `<input id="en" class="swal2-input" value="${p.name}" placeholder="الاسم"><input id="ep" class="swal2-input" value="${p.phone || ''}" placeholder="رقم الجوال">`,
+            didOpen: () => { setTimeout(() => document.getElementById('en')?.focus(), 100); },
+            width: '320px',
+            preConfirm: () => { const n = document.getElementById('en').value; if (!n) { Swal.showValidationMessage('الاسم مطلوب'); return false; } return { name: n, phone: document.getElementById('ep').value }; }
+        });
+        if (v) { p.name = v.name; p.phone = v.phone; saveData(true); showNotification('تم التحديث', 'success'); showPersonDetails(id); }
+    }
+    
+    function showPersonDetails(id) {
+        currentPersonId = id;
+        currentPage = 'person';
+        updateActionButtons();
+        const p = persons.find(p => p.id === id);
+        if (!p) return;
+        const b = getPersonBalance(id);
+        const isPos = b > 0;
+        const symbol = getCurrencySymbol();
+        const pt = transactions.filter(t => t.person_id === id).sort((a,b) => new Date(b.datetime) - new Date(a.datetime));
+        
+        let html = `<div style="display: flex; flex-direction: column; gap: 16px;"><div class="card" style="text-align: center;"><div style="display: flex; justify-content: center; gap: 8px; align-items: center; margin-bottom: 10px;"><div class="avatar" style="width: 65px; height: 65px; font-size: 26px;"><i class="fas fa-user"></i></div><div class="edit-icon" onclick="editPersonDirectly(${id})"><i class="fas fa-pen" style="font-size: 12px; color: #3b82f6;"></i></div></div><div style="font-size: 18px; font-weight: bold;">${p.name}</div>${p.phone ? `<div style="font-size: 11px; color: var(--gray-500);">📞 ${p.phone}</div>` : ''}<div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--gray-200);"><div style="font-size: 28px; font-weight: bold; ${isPos ? 'color: #10b981;' : 'color: #ef4444;'}">${Math.abs(b).toFixed(2)} ${symbol}</div><div style="font-size: 11px; margin-top: 4px;">${isPos ? 'أنا دفعت له' : 'هو دفع لي'}</div></div><button onclick="sendWhatsApp(${id})" class="btn-whatsapp-reminder" style="margin-top: 12px; width: 100%; padding: 10px;"><i class="fab fa-whatsapp"></i> إرسال تذكير واتساب</button></div><div class="card"><div style="display: flex; justify-content: space-between; margin-bottom: 12px;"><h3 style="font-size: 14px; font-weight: bold;"><i class="fas fa-list-ul" style="color: #3b82f6;"></i> المعاملات</h3><button onclick="showAddTransaction(${id})" class="btn btn-primary" style="padding: 4px 12px; font-size: 11px; background: #3b82f6; color: white; border: none; border-radius: 8px;"><i class="fas fa-plus"></i> إضافة</button></div><div style="max-height: 350px; overflow-y: auto;">`;
+        
+        if (pt.length) {
+            pt.forEach(t => {
+                const isPaid = t.amount > 0;
+                html += `<div class="transaction-item" style="border-bottom: 1px solid var(--gray-200); padding: 10px 0;"><div style="display: flex; justify-content: space-between;"><div style="flex: 1;"><div style="font-weight: 600; font-size: 13px;">${t.reason || 'بدون سبب'}</div><div class="time-stamp">📅 ${t.datetime}</div>${t.notes ? `<div style="font-size: 11px; color: var(--gray-500); margin-top: 4px;">📝 ${t.notes}</div>` : ''}${t.receiptImage ? `<img src="${t.receiptImage}" class="receipt-preview" onclick="viewReceiptImage('${t.receiptImage}')">` : ''}<div style="margin-top: 6px;"><span class="badge ${t.is_settled ? 'badge-success' : 'badge-warning'}">${t.is_settled ? 'مسددة' : 'غير مسددة'}</span></div></div><div style="text-align: left;"><div style="font-weight: bold; ${isPaid ? 'color: #10b981;' : 'color: #ef4444;'}">${Math.abs(t.amount)} ${symbol}</div><div style="font-size: 11px; margin-bottom: 6px;">${isPaid ? 'أنا دفعت له' : 'هو دفع لي'}</div><div style="display: flex; gap: 6px;">${!t.is_settled ? `<button onclick="settleTransaction(${t.id})" style="padding: 3px 8px; background: #10b98120; border: none; border-radius: 6px; font-size: 10px; color: #10b981; cursor: pointer;">تسوية</button>` : ''}<button onclick="editTransaction(${t.id})" style="padding: 3px 8px; background: #3b82f620; border: none; border-radius: 6px; font-size: 10px; color: #3b82f6; cursor: pointer;"><i class="fas fa-edit"></i></button><button onclick="deleteTransaction(${t.id})" style="padding: 3px 8px; background: #ef444420; border: none; border-radius: 6px; font-size: 10px; color: #ef4444; cursor: pointer;"><i class="fas fa-trash"></i></button></div></div></div></div>`;
+            });
+        } else {
+            html += `<div style="text-align: center; padding: 30px; color: var(--gray-500);">لا توجد معاملات</div>`;
+        }
+        
+        html += `</div></div>`;
+        
+        if (b !== 0) {
+            html += `<button onclick="settleAllWithPerson(${id})" class="btn-settle-all"><i class="fas fa-handshake"></i> تسوية الكل مع ${p.name}</button>`;
+        }
+        
+        const settledCount = transactions.filter(t => t.person_id === id && t.is_settled === true).length;
+        if (settledCount > 0) {
+            html += `<button onclick="clearSettledTransactions(${id})" class="btn-clear-settled"><i class="fas fa-trash-alt"></i> مسح المعاملات المسددة (${settledCount})</button>`;
+        }
+        
+        html += `</div>`;
+        document.getElementById('mainContent').innerHTML = html;
+        scrollToTop();
+    }
+    
+    const reasonOptions = ['طعام', 'مشتريات', 'ملابس', 'أدوية', 'مواصلات', 'أخرى'];
+    let selectedType = 'paidByMe';
+    
+    function addReceiptImage(transactionId) {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.onchange = async (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const transaction = transactions.find(t => t.id === transactionId);
+                    if (transaction) {
+                        transaction.receiptImage = event.target.result;
+                        saveData(true);
+                        if (currentPersonId) showPersonDetails(currentPersonId);
+                        else renderDashboard();
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        };
+        input.click();
+    }
+    
+    function showAddTransaction(pid = null) {
+        let tempPid = pid;
+        let receiptData = null;
+        selectedType = 'paidByMe';
+        
+        const updateSelect = () => {
+            const s = document.getElementById('personSelect');
+            if (s) s.innerHTML = '<option value="">-- اختر شخص --</option>' + persons.map(p => `<option value="${p.id}" ${tempPid == p.id ? 'selected' : ''}>${p.name}</option>`).join('');
+        };
+        
+        Swal.fire({
+            title: 'دين جديد',
+            html: `<div style="text-align: right;"><div style="margin-bottom: 8px;"><label style="font-size: 11px;">الشخص</label><div style="display: flex; gap: 5px; margin-top: 3px;"><select id="personSelect" style="flex: 1; padding: 5px 8px; border-radius: 8px; font-size: 12px;">${persons.map(p => `<option value="${p.id}" ${pid == p.id ? 'selected' : ''}>${p.name}</option>`).join('')}</select><button onclick="addNewPersonFromModal()" type="button" class="btn-new-person">جديد</button></div></div><div style="margin-bottom: 8px;"><label style="font-size: 11px;">نوع الدين</label><div style="display: flex; gap: 5px; margin-top: 3px;"><button type="button" id="typePaidByMe" style="flex: 1; padding: 5px; border-radius: 8px; background: #10b98120; color: #10b981; border: 2px solid #10b981; font-weight: bold; font-size: 11px;">أنا دفعت له</button><button type="button" id="typePaidToMe" style="flex: 1; padding: 5px; border-radius: 8px; background: #f1f5f9; color: #64748b; border: 2px solid #e2e8f0; font-weight: bold; font-size: 11px;">هو دفع لي</button></div></div><div style="margin-bottom: 8px;"><label style="font-size: 11px;">المبلغ</label><input type="number" id="amountInput" placeholder="500" style="margin-top: 3px; width: 100%; padding: 5px 8px; border-radius: 8px; font-size: 12px;"></div><div style="margin-bottom: 8px;"><label style="font-size: 11px;">السبب</label><select id="reasonSelect" style="margin-top: 3px; width: 100%; padding: 5px 8px; border-radius: 8px; font-size: 12px;"><option value="">-- اختر سبب --</option>${reasonOptions.map(r => `<option value="${r}">${r}</option>`).join('')}</select></div><div style="margin-bottom: 8px;"><label style="font-size: 11px;">ملاحظات</label><textarea id="notesInput" rows="2" style="margin-top: 3px; width: 100%; padding: 5px 8px; border-radius: 8px; font-size: 12px;"></textarea></div><div><label style="font-size: 11px;">مرفقات (فاتورة)</label><div id="receiptPreview" style="margin-top: 3px;"></div><button type="button" id="uploadReceiptBtn" style="margin-top: 3px; padding: 4px 8px; background: #3b82f6; color: white; border: none; border-radius: 6px; font-size: 10px; cursor: pointer;"><i class="fas fa-paperclip"></i> إرفاق صورة</button></div></div>`,
+            showCancelButton: true, confirmButtonText: 'حفظ', cancelButtonText: 'إلغاء', confirmButtonColor: '#10b981',
+            width: '90%',
+            maxWidth: '350px',
+            didOpen: () => {
+                updateSelect();
+                const inputs = ['amountInput', 'reasonSelect', 'notesInput'];
+                inputs.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        el.addEventListener('keypress', (e) => {
+                            if (e.key === 'Enter') {
+                                e.preventDefault();
+                                const confirmBtn = Swal.getConfirmButton();
+                                if (confirmBtn) confirmBtn.click();
+                            }
+                        });
+                    }
+                });
+                const b1 = document.getElementById('typePaidByMe');
+                const b2 = document.getElementById('typePaidToMe');
+                
+                b1.style.background = '#10b98120';
+                b1.style.color = '#10b981';
+                b1.style.borderColor = '#10b981';
+                b2.style.background = '#f1f5f9';
+                b2.style.color = '#64748b';
+                b2.style.borderColor = '#e2e8f0';
+                
+                b1.onclick = () => { selectedType = 'paidByMe'; b1.style.background = '#10b98120'; b1.style.color = '#10b981'; b1.style.borderColor = '#10b981'; b2.style.background = '#f1f5f9'; b2.style.color = '#64748b'; b2.style.borderColor = '#e2e8f0'; };
+                b2.onclick = () => { selectedType = 'paidToMe'; b2.style.background = '#ef444420'; b2.style.color = '#ef4444'; b2.style.borderColor = '#ef4444'; b1.style.background = '#f1f5f9'; b1.style.color = '#64748b'; b1.style.borderColor = '#e2e8f0'; };
+                document.getElementById('uploadReceiptBtn').addEventListener('click', () => {
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.accept = 'image/*';
+                    input.onchange = (e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                            const reader = new FileReader();
+                            reader.onload = (event) => {
+                                receiptData = event.target.result;
+                                const preview = document.getElementById('receiptPreview');
+                                preview.innerHTML = `<img src="${receiptData}" style="max-width: 100%; max-height: 60px; border-radius: 6px; margin-top: 3px;"> <button type="button" onclick="document.getElementById('receiptPreview').innerHTML = ''; receiptData = null;" style="background: #ef4444; color: white; border: none; border-radius: 4px; padding: 2px 5px; font-size: 9px; cursor: pointer;">إزالة</button>`;
+                            };
+                            reader.readAsDataURL(file);
+                        }
+                    };
+                    input.click();
+                });
+            },
+            preConfirm: () => {
+                const pid = parseInt(document.getElementById('personSelect').value);
+                const amt = parseFloat(document.getElementById('amountInput').value);
+                const reason = document.getElementById('reasonSelect').value;
+                const notes = document.getElementById('notesInput').value;
+                if (!pid) { Swal.showValidationMessage('اختر الشخص'); return false; }
+                if (!amt || amt <= 0) { Swal.showValidationMessage('المبلغ مطلوب'); return false; }
+                let final = amt; if (selectedType === 'paidToMe') final = -amt;
+                const now = getCurrentDateTime();
+                return { pid, amount: final, reason: reason || '', date: now.date, time: now.time, datetime: now.full, notes, receiptImage: receiptData };
+            }
+        }).then(res => {
+            if (res.isConfirmed) {
+                transactions.push({ id: Date.now(), person_id: res.value.pid, amount: res.value.amount, reason: res.value.reason || 'أخرى', date: res.value.date, time: res.value.time, datetime: res.value.datetime, is_settled: false, notes: res.value.notes, receiptImage: res.value.receiptImage || null });
+                saveData(true);
+                if (pid) showPersonDetails(pid);
+                else renderDashboard();
+            }
+        });
+    }
+    
+    window.addNewPersonFromModal = async function() {
+        const { value: v } = await Swal.fire({
+            title: 'إضافة شخص جديد',
+            html: `<input id="newName" class="swal2-input" placeholder="الاسم" style="margin-bottom: 8px;"><input id="newPhone" class="swal2-input" placeholder="رقم الجوال">`,
+            didOpen: () => { setTimeout(() => document.getElementById('newName')?.focus(), 100); },
+            width: '320px',
+            preConfirm: () => {
+                const n = document.getElementById('newName').value;
+                if (!n) { Swal.showValidationMessage('الاسم مطلوب'); return false; }
+                return { name: n, phone: document.getElementById('newPhone').value };
+            }
+        });
+        if (v) {
+            const np = { id: Date.now(), name: v.name, phone: v.phone || '', created_at: new Date().toISOString() };
+            persons.push(np);
+            saveData(true);
+            showNotification('تمت إضافة الشخص', 'success');
+            const sel = document.getElementById('personSelect');
+            if (sel) sel.innerHTML = '<option value="">-- اختر شخص --</option>' + persons.map(p => `<option value="${p.id}" ${p.id === np.id ? 'selected' : ''}>${p.name}</option>`).join('');
+        }
+    };
+    
+    async function confirmDangerousAction(title, text, confirmText) {
+        return await Swal.fire({ title: title, text: text, icon: 'warning', showCancelButton: true, confirmButtonText: confirmText, cancelButtonText: 'إلغاء', confirmButtonColor: '#ef4444', width: '350px' });
+    }
+    
+    async function clearHistory() {
+        if (!transactions.length) { showNotification('لا توجد معاملات لمسحها', 'info'); return; }
+        const result = await confirmDangerousAction('مسح السجل', 'سيتم حذف جميع المعاملات مع الاحتفاظ بالأشخاص. هل أنت متأكد؟', 'نعم، امسح');
+        if (result.isConfirmed) { transactions = []; saveData(true); renderDashboard(); showNotification('تم مسح جميع المعاملات', 'success'); }
+    }
+    
+    async function clearAllData() {
+        const result = await confirmDangerousAction('مسح جميع البيانات!', 'سيتم حذف كل شيء (الأشخاص والمعاملات). لا يمكن التراجع!', 'نعم، احذف الكل');
+        if (result.isConfirmed) { persons = []; transactions = []; saveData(true); renderDashboard(); showNotification('تم مسح جميع البيانات', 'success'); }
+    }
+    
+    async function deleteTransaction(id) {
+        const result = await confirmDangerousAction('حذف المعاملة؟', 'لا يمكن التراجع عن هذا الإجراء', 'نعم، احذف');
+        if (result.isConfirmed) { transactions = transactions.filter(t => t.id !== id); saveData(true); if (currentPersonId) showPersonDetails(currentPersonId); else renderDashboard(); }
+    }
+    
+    async function editTransaction(id) {
+        const t = transactions.find(t => t.id === id);
+        if (!t) return;
+        const isPaid = t.amount > 0;
+        const { value: v } = await Swal.fire({
+            title: 'تعديل المعاملة',
+            html: `<input id="eAmount" class="swal2-input" value="${Math.abs(t.amount)}" type="number" placeholder="المبلغ"><select id="eType" class="swal2-select" style="margin-bottom: 8px;"><option value="paidByMe" ${isPaid ? 'selected' : ''}>أنا دفعت له</option><option value="paidToMe" ${!isPaid ? 'selected' : ''}>هو دفع لي</option></select><select id="eReason" class="swal2-select"><option value="">-- اختر سبب --</option>${reasonOptions.map(r => `<option value="${r}" ${t.reason === r ? 'selected' : ''}>${r}</option>`).join('')}<option value="أخرى" ${t.reason === 'أخرى' ? 'selected' : ''}>أخرى</option></select>`,
+            width: '350px',
+            preConfirm: () => {
+                const amt = parseFloat(document.getElementById('eAmount').value);
+                const typ = document.getElementById('eType').value;
+                const rea = document.getElementById('eReason').value;
+                if (!amt || amt <= 0) { Swal.showValidationMessage('المبلغ مطلوب'); return false; }
+                let final = amt; if (typ === 'paidToMe') final = -amt;
+                return { amount: final, reason: rea };
+            }
+        });
+        if (v) { t.amount = v.amount; t.reason = v.reason || 'أخرى'; saveData(true); if (currentPersonId) showPersonDetails(currentPersonId); else renderDashboard(); }
+    }
+    
+    async function deletePerson(id) {
+        const p = persons.find(p => p.id === id);
+        const result = await confirmDangerousAction(`حذف "${p?.name}"؟`, 'سيتم حذف هذا الشخص وجميع معاملاته', 'نعم، احذف');
+        if (result.isConfirmed) { persons = persons.filter(p => p.id !== id); transactions = transactions.filter(t => t.person_id !== id); saveData(true); renderDashboard(); }
+    }
+    
+    async function editPerson(id) {
+        const p = persons.find(p => p.id === id);
+        if (!p) return;
+        const { value: v } = await Swal.fire({
+            title: 'تعديل الشخص',
+            html: `<input id="editName" class="swal2-input" value="${p.name}" placeholder="الاسم"><input id="editPhone" class="swal2-input" value="${p.phone || ''}" placeholder="رقم الجوال">`,
+            didOpen: () => { setTimeout(() => document.getElementById('editName')?.focus(), 100); },
+            width: '320px',
+            preConfirm: () => { const n = document.getElementById('editName').value; if (!n) { Swal.showValidationMessage('الاسم مطلوب'); return false; } return { name: n, phone: document.getElementById('editPhone').value }; }
+        });
+        if (v) { p.name = v.name; p.phone = v.phone; saveData(true); showPersonsList(); }
+    }
+    
+    async function settleTransaction(id) {
+        const res = await Swal.fire({ title: 'تسوية الدين', text: 'هل تم التسديد؟', icon: 'question', showCancelButton: true, confirmButtonText: 'نعم', cancelButtonText: 'إلغاء', width: '350px' });
+        if (res.isConfirmed) { 
+            const tr = transactions.find(t => t.id === id);
+            if (tr) { 
+                tr.is_settled = true; 
+                saveData(true); 
+                if (currentPersonId) showPersonDetails(currentPersonId);
+                else renderDashboard();
+            }
+        }
+    }
+    
+    async function settleAllWithPerson(pid) {
+        const p = persons.find(p => p.id === pid);
+        const res = await Swal.fire({ title: 'تسوية الكل', text: `تسوية جميع الديون مع ${p?.name}؟`, icon: 'warning', showCancelButton: true, confirmButtonText: 'نعم', cancelButtonText: 'إلغاء', width: '350px' });
+        if (res.isConfirmed) { 
+            transactions.forEach(t => { 
+                if (t.person_id === pid && !t.is_settled) { 
+                    t.is_settled = true; 
+                } 
+            }); 
+            saveData(true); 
+            showPersonDetails(pid); 
+        }
+    }
+    
+    async function addNewPerson() {
+        const { value: v } = await Swal.fire({
+            title: 'إضافة شخص جديد',
+            html: `<input id="newName" class="swal2-input" placeholder="الاسم" style="margin-bottom: 8px;"><input id="newPhone" class="swal2-input" placeholder="رقم الجوال">`,
+            didOpen: () => { setTimeout(() => document.getElementById('newName')?.focus(), 100); },
+            width: '320px',
+            preConfirm: () => { const n = document.getElementById('newName').value; if (!n) { Swal.showValidationMessage('الاسم مطلوب'); return false; } return { name: n, phone: document.getElementById('newPhone').value || '' }; }
+        });
+        if (v) { persons.push({ id: Date.now(), name: v.name, phone: v.phone, created_at: new Date().toISOString() }); saveData(true); showPersonsList(); }
+    }
+    
+    function showAllTransactions() { 
+        const all = [...transactions].sort((a,b) => new Date(b.datetime) - new Date(a.datetime)); 
+        Swal.fire({ 
+            title: 'جميع المعاملات', 
+            html: `<div style="max-height: 400px; overflow-y: auto; text-align: right;">${all.map(t => { 
+                const p = persons.find(p => p.id === t.person_id); 
+                const isPaid = t.amount > 0; 
+                return `<div style="border-bottom: 1px solid #e2e8f0; padding: 8px;">
+                            <div style="font-weight: bold;">${p?.name}</div>
+                            <div style="font-size: 11px;">${t.reason || '-'} <span class="time-stamp">📅 ${t.datetime}</span></div>
+                            <div style="font-weight: bold; margin-top: 4px; ${isPaid ? 'color: #10b981;' : 'color: #ef4444;'}">${Math.abs(t.amount)} ${getCurrencySymbol()}</div>
+                            <div style="font-size: 10px;">${isPaid ? 'أنا دفعت له' : 'هو دفع لي'}</div>
+                            <div style="font-size: 10px;">${t.is_settled ? 'مسددة' : 'غير مسددة'}</div>
+                        </div>`; 
+            }).join('')}</div>`, 
+            width: '90%', 
+            maxWidth: '450px' 
+        }); 
+    }
+    
+    function toggleDarkMode() {
+        document.body.classList.toggle('dark-mode');
+        localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+        if (currentPersonId) showPersonDetails(currentPersonId);
+        else if (document.getElementById('mainContent').innerHTML.includes('persons-grid')) showPersonsList();
+        else renderDashboard();
+    }
+    
+    function loadDarkMode() { if (localStorage.getItem('darkMode') === 'true') document.body.classList.add('dark-mode'); }
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('unlockBtn')?.addEventListener('click', checkPassword);
+        document.getElementById('passwordInput')?.addEventListener('keypress', e => { if (e.key === 'Enter') checkPassword(); });
+    });
+    
+    // ربط الدوال العامة
+    window.exportToExcel = exportToExcel;
+    window.exportToPDF = exportToPDF;
+    
+    loadDarkMode();
+    loadData();
+    enableAutoSave();
+    setTimeout(() => hideSplash(), 3000);
+    setTimeout(() => { renderDashboard(); isInitialized = true; }, 100);
+    
+    window.viewReceiptImage = viewReceiptImage;
+    window.editPersonDirectly = editPersonDirectly;
+    window.sendWhatsApp = sendWhatsApp;
+    window.copySummary = copySummary;
+    window.showAddTransaction = showAddTransaction;
+    window.showPersonsList = showPersonsList;
+    window.showPersonDetails = showPersonDetails;
+    window.renderDashboard = renderDashboard;
+    window.deleteTransaction = deleteTransaction;
+    window.editTransaction = editTransaction;
+    window.deletePerson = deletePerson;
+    window.editPerson = editPerson;
+    window.settleTransaction = settleTransaction;
+    window.settleAllWithPerson = settleAllWithPerson;
+    window.addNewPerson = addNewPerson;
+    window.showAllTransactions = showAllTransactions;
+    window.showSettings = showSettings;
+    window.managePassword = managePassword;
+    window.clearHistory = clearHistory;
+    window.clearAllData = clearAllData;
+    window.toggleDarkMode = toggleDarkMode;
+    window.scrollToTop = scrollToTop;
+    window.exportData = exportData;
+    window.importData = importData;
+    window.showUserGuide = showUserGuide;
+    window.showAbout = showAbout;
+    window.updateActionButtons = updateActionButtons;
+    window.clearSettledTransactions = clearSettledTransactions;
+</script>
+</body>
+</html>
